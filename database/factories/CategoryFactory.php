@@ -16,9 +16,7 @@ class CategoryFactory extends Factory
         ];
     }
 
-    /**
-     * تنظیم والد برای دسته‌بندی
-     */
+
     public function withParent()
     {
         return $this->state(function (array $attributes) {
@@ -28,9 +26,7 @@ class CategoryFactory extends Factory
         });
     }
 
-    /**
-     * ایجاد دسته‌بندی ریشه (بدون والد)
-     */
+
     public function root()
     {
         return $this->state(function (array $attributes) {
@@ -40,9 +36,6 @@ class CategoryFactory extends Factory
         });
     }
 
-    /**
-     * ایجاد ساختار درختی نمونه
-     */
     public function withChildren()
     {
         return $this->afterCreating(function (Category $category) {
