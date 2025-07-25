@@ -1,61 +1,146 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Product Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Overview
 
-## About Laravel
+Build a RESTful API for a product management system where authenticated users can:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Create and manage their own products
+- Associate products with predefined attributes
+- Track and view a full version history of product updates
+- Receive email notifications on updates
+- Organize products using a deeply nested category tree
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Technical Requirements
 
-## Learning Laravel
+### 1️⃣ Authentication & Authorization
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Users must only access and manage their own products and related data.
+- Use Laravel Policies for enforcing access control.
+- All routes should be authenticated using a method like Laravel Sanctum or Passport.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 2️⃣ Product Management
 
-## Laravel Sponsors
+Each product must include the following fields:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- `user_id` – product owner
+- `title` – required, string
+- `content` – optional, text
+- `price` – required, decimal
+- `stock` – required, integer
+- `category_id` – required, foreign key to a category
 
-### Premium Partners
+#### Users must be able to:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- Create a product
+- Update a product
+- View product details
+- List all of their products, sorted by:
+    - Availability (`stock > 0`)
+    - Then price (ascending)
 
-## Contributing
+> Product deletion is not required.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+### 3️⃣ Product Attributes
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Products can be associated with predefined attributes, using a many-to-many relationship where each attribute has a value assigned per product.
 
-## Security Vulnerabilities
+#### Requirements:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- Define an `attributes` table with exactly 5 attributes:
+    - `size`, `length`, `color`, `material`, `brand`
+- Users must be able to attach one or more of these to a product, with a specific value (e.g., `color: red`, `brand: Samsung`) during create and update.
+- You do not need to implement APIs to manage the attributes — they are assumed to be seeded.
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 4️⃣ Version History System
+
+Each time a product is updated, a version record must be created and saved.
+
+#### Required Endpoints:
+
+- `GET /api/products/{id}/history`  
+  Returns all version records for a product:
+    - Unique version ID
+    - Timestamp of update
+    - User who made the change
+
+- `GET /api/products/{id}/history/{versionId}`  
+  Returns details for a specific update:
+    - Fields that changed
+    - Old and new values
+    - User
+    - Timestamp
+
+> You are free to design the versioning mechanism — focus on scalability and clarity.
+
+---
+
+### 5️⃣ Email Notification
+
+When a product is updated, an email notification must be sent to the product owner.
+
+- Use Laravel’s native mail system — no need for external services.
+- Ensure the logic is triggered and includes the update details.
+
+---
+
+### 6️⃣ Category Management System (Tree-Based)
+
+Products belong to categories, which are organized into a deeply nested tree structure with unlimited levels.
+
+#### Requirements:
+
+You must implement a category system that supports:
+
+- Unlimited depth (via parent-child relationships)
+- Efficient querying of:
+    - Immediate children
+    - All descendants (deep-nested)
+    - All ancestors (from current to root)
+- Tree restructuring (e.g., move a category to a new parent)
+- Adding new categories at any level
+
+> Your implementation will be tested against a large dataset (10,000+ categories).  
+> Avoid traditional nested set models unless performance is carefully optimized.  
+> Focus on query efficiency and structural flexibility.
+> Using the latest SQL query structures is encouraged.
+
+#### Required Endpoints:
+
+- `GET /api/categories/{id}/children` – Immediate children
+- `GET /api/categories/{id}/descendants` – All nested descendants (flat, sorted by depth)
+- `GET /api/categories/{id}/ancestors` – All ancestors up to the root
+- `POST /api/categories` – Create a category with optional `parent_id`
+- `PATCH /api/categories/{id}/move` – Move a category (and subtree) to a new parent
+
+---
+
+## Evaluation Criteria
+
+### ✅ Mandatory
+
+- Clean, modular Laravel code
+- Proper use of:
+    - Eloquent relationships
+    - Form Requests
+    - Policies for access control
+    - Events/Observers where appropriate
+- Secure RESTful API
+- Scalable and optimized category tree implementation
+- Working product version history
+- Triggered email notifications
+
+---
+
+### 💡 Bonus Points
+
+- Clear and consistent API responses (e.g., API Resources)
+- Unit or feature test coverage
+- API documentation (Postman or Swagger)  
